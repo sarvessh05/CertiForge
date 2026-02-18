@@ -1,4 +1,5 @@
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, rgb } from "pdf-lib";
+import fontkit from "fontkit";
 import QRCode from "qrcode";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
@@ -12,6 +13,59 @@ interface GenerateOptions {
   enableQR: boolean;
   qrPosition: { x: number; y: number };
   onProgress: (current: number) => void;
+}
+
+// Google Fonts CDN URLs for font files
+const FONT_URLS: Record<string, string> = {
+  // Elegant Serif
+  "Playfair Display": "https://fonts.gstatic.com/s/playfairdisplay/v36/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvUDQZNLo_U2r.ttf",
+  "Cinzel": "https://fonts.gstatic.com/s/cinzel/v23/8vIU7ww63mVu7gtR-kwKxNvkNOjw-tbnTYrvDE5ZdqU.ttf",
+  "Cormorant Garamond": "https://fonts.gstatic.com/s/cormorantgaramond/v16/co3PMX5slCNuHLi8bLeY9MK7whWMhyjQAllvuQWJ5heb_w.ttf",
+  "Libre Baskerville": "https://fonts.gstatic.com/s/librebaskerville/v14/kmKiZrc3Hgbbcjq75U4uslyuy4kn0qNcWx8QDO-WzQ.ttf",
+  "Merriweather": "https://fonts.gstatic.com/s/merriweather/v30/u-4n0qyriQwlOrhSvowK_l521wRZWMf6hPvhPUWH.ttf",
+  "EB Garamond": "https://fonts.gstatic.com/s/ebgaramond/v27/SlGDmQSNjdsmc35JDF1K5E55YMjF_7DPuGi-6_RUA4V-e6yHgQ.ttf",
+  "Crimson Text": "https://fonts.gstatic.com/s/crimsontext/v19/wlppgwHKFkZgtmSR3NB0oRJvaAJSA_JN3Q.ttf",
+  "Old Standard TT": "https://fonts.gstatic.com/s/oldstandardtt/v18/MwQubh3o1vLImiwAVvYawgcf2eVurVC5RHdCZg.ttf",
+  
+  // Modern Sans
+  "Montserrat": "https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg1_i6t8kCHKm459WdhyyTh89ZNpQ.ttf",
+  "Poppins": "https://fonts.gstatic.com/s/poppins/v21/pxiByp8kv8JHgFVrLEj6Z1JlFc-K.ttf",
+  "Raleway": "https://fonts.gstatic.com/s/raleway/v34/1Ptxg8zYS_SKggPN4iEgvnHyvveLxVvaorCGPrcVIT9d0c-dYA.ttf",
+  "Lato": "https://fonts.gstatic.com/s/lato/v24/S6u9w4BMUTPHh7USSwaPGR_p.ttf",
+  "Oswald": "https://fonts.gstatic.com/s/oswald/v53/TK3_WkUHHAIjg75cFRf3bXL8LICs1_FvsUtiZTaR.ttf",
+  "Roboto": "https://fonts.gstatic.com/s/roboto/v32/KFOmCnqEu92Fr1Me5WZLCzYlKw.ttf",
+  "Open Sans": "https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsjZ0C4nY1M2xLER.ttf",
+  
+  // Script/Signature
+  "Great Vibes": "https://fonts.gstatic.com/s/greatvibes/v19/RWmMoKWR9v4ksMfaWd_JN-XCg6UKDXlq.ttf",
+  "Allura": "https://fonts.gstatic.com/s/allura/v21/9oRPNYsQpS4zjuAPjAIXPtrrGA.ttf",
+  "Dancing Script": "https://fonts.gstatic.com/s/dancingscript/v25/If2cXTr6YS-zF4S-kcSWSVi_sxjsohD9F50Ruu7BMSoHTeB9ptDqpw.ttf",
+  "Pacifico": "https://fonts.gstatic.com/s/pacifico/v22/FwZY7-Qmy14u9lezJ96A4sijpFu_.ttf",
+  "Sacramento": "https://fonts.gstatic.com/s/sacramento/v15/buEzpo6gcdjy0EiZMBUG0CoV_NxLeiw.ttf",
+};
+
+// Cache for loaded fonts
+const fontCache = new Map<string, ArrayBuffer>();
+
+async function loadFont(fontFamily: string): Promise<ArrayBuffer | null> {
+  // Check cache first
+  if (fontCache.has(fontFamily)) {
+    return fontCache.get(fontFamily)!;
+  }
+
+  const url = FONT_URLS[fontFamily];
+  if (!url) return null;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const fontData = await response.arrayBuffer();
+    fontCache.set(fontFamily, fontData);
+    return fontData;
+  } catch (error) {
+    console.error(`Failed to load font ${fontFamily}:`, error);
+    return null;
+  }
 }
 
 export async function generateCertificates(options: GenerateOptions): Promise<Blob> {
@@ -29,46 +83,10 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
   const templateBytes = await templateFile.arrayBuffer();
   const isImage = templateFile.type.startsWith("image/");
 
-  // Font mapping - Google Fonts to PDF Standard Fonts
-  const getFontType = (fontFamily: string) => {
-    // Map Google Fonts to closest PDF standard fonts
-    switch (fontFamily) {
-      // Elegant Serif fonts → Times Roman Bold (closest match)
-      case "Playfair Display":
-      case "Cinzel":
-      case "Cormorant Garamond":
-        return StandardFonts.TimesRomanBold;
-      
-      // Formal Serif → Times Roman
-      case "Libre Baskerville":
-        return StandardFonts.TimesRoman;
-      
-      // Modern Sans fonts → Helvetica Bold
-      case "Montserrat":
-      case "Poppins":
-      case "Raleway":
-        return StandardFonts.HelveticaBold;
-      
-      // Minimal Sans → Helvetica
-      case "Lato":
-        return StandardFonts.Helvetica;
-      
-      // Script fonts → Times Italic (closest available)
-      case "Great Vibes":
-      case "Allura":
-        return StandardFonts.TimesRomanItalic;
-      
-      // Standard PDF fonts
-      case "Helvetica": return StandardFonts.Helvetica;
-      case "Helvetica-Bold": return StandardFonts.HelveticaBold;
-      case "Times-Roman": return StandardFonts.TimesRoman;
-      case "Times-Bold": return StandardFonts.TimesRomanBold;
-      case "Courier": return StandardFonts.Courier;
-      case "Courier-Bold": return StandardFonts.CourierBold;
-      
-      default: return StandardFonts.Helvetica;
-    }
-  };
+  // Pre-load all required fonts
+  const uniqueFonts = [...new Set(elements.filter(el => el.enabled).map(el => el.fontFamily))];
+  const fontPromises = uniqueFonts.map(font => loadFont(font));
+  await Promise.all(fontPromises);
 
   for (let i = 0; i < data.length; i++) {
     const row = data[i];
@@ -87,6 +105,9 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
       pdfDoc = await PDFDocument.load(templateBytes);
     }
 
+    // Register fontkit
+    pdfDoc.registerFontkit(fontkit);
+
     const page = pdfDoc.getPages()[0];
     const { width: pageW, height: pageH } = page.getSize();
 
@@ -101,8 +122,24 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
       const text = String(row[columnName] ?? "");
       if (!text) continue;
 
-      // Embed font for this element
-      const font = await pdfDoc.embedFont(getFontType(el.fontFamily));
+      // Try to load custom font, fallback to Helvetica
+      let font;
+      const fontData = await loadFont(el.fontFamily);
+      
+      if (fontData) {
+        try {
+          font = await pdfDoc.embedFont(fontData);
+        } catch (error) {
+          console.error(`Failed to embed font ${el.fontFamily}, using fallback`, error);
+          // Fallback to Helvetica
+          const { StandardFonts } = await import("pdf-lib");
+          font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        }
+      } else {
+        // Use standard font as fallback
+        const { StandardFonts } = await import("pdf-lib");
+        font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      }
 
       const hexColor = el.color;
       const r = parseInt(hexColor.slice(1, 3), 16) / 255;

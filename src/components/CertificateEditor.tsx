@@ -48,16 +48,26 @@ const FONTS = [
   { value: "Cinzel", label: "Cinzel (Royal)" },
   { value: "Cormorant Garamond", label: "Cormorant Garamond (Classic)" },
   { value: "Libre Baskerville", label: "Libre Baskerville (Formal)" },
+  { value: "Merriweather", label: "Merriweather (Traditional)" },
+  { value: "EB Garamond", label: "EB Garamond (Refined)" },
+  { value: "Crimson Text", label: "Crimson Text (Academic)" },
+  { value: "Old Standard TT", label: "Old Standard TT (Vintage)" },
 
   // Modern Sans (For Event/Date)
   { value: "Montserrat", label: "Montserrat (Modern)" },
   { value: "Poppins", label: "Poppins (Clean)" },
   { value: "Raleway", label: "Raleway (Professional)" },
   { value: "Lato", label: "Lato (Minimal)" },
+  { value: "Oswald", label: "Oswald (Bold)" },
+  { value: "Roboto", label: "Roboto (Neutral)" },
+  { value: "Open Sans", label: "Open Sans (Friendly)" },
 
-  // Script (Optional)
+  // Script/Signature (For Decorative Elements)
   { value: "Great Vibes", label: "Great Vibes (Signature)" },
   { value: "Allura", label: "Allura (Elegant Script)" },
+  { value: "Dancing Script", label: "Dancing Script (Casual)" },
+  { value: "Pacifico", label: "Pacifico (Playful)" },
+  { value: "Sacramento", label: "Sacramento (Handwritten)" },
 
   // Fallback PDF Fonts
   { value: "Helvetica", label: "Helvetica (Default)" },
@@ -130,13 +140,14 @@ const CertificateEditor = ({
       let fontFamily = el.fontFamily;
       let fontWeight = "400";
       
-      // Handle font weights for Google Fonts
-      if (fontFamily === "Playfair Display" || fontFamily === "Cinzel" || 
-          fontFamily === "Cormorant Garamond" || fontFamily === "Libre Baskerville") {
+      // Handle font weights for different font categories
+      if (["Playfair Display", "Cinzel", "Cormorant Garamond", "Libre Baskerville", 
+           "Merriweather", "EB Garamond", "Crimson Text", "Old Standard TT"].includes(fontFamily)) {
         fontWeight = "700"; // Bold for elegant serif fonts
-      } else if (fontFamily === "Montserrat" || fontFamily === "Poppins" || 
-                 fontFamily === "Raleway" || fontFamily === "Lato") {
+      } else if (["Montserrat", "Poppins", "Raleway", "Lato", "Oswald", "Roboto", "Open Sans"].includes(fontFamily)) {
         fontWeight = "600"; // Semi-bold for modern sans
+      } else if (["Great Vibes", "Allura", "Dancing Script", "Pacifico", "Sacramento"].includes(fontFamily)) {
+        fontWeight = "400"; // Regular for script fonts
       }
       
       ctx.font = `${fontWeight} ${el.fontSize * scale}px "${fontFamily}", serif`;
@@ -250,11 +261,10 @@ const CertificateEditor = ({
       let fontFamily = el.fontFamily;
       let fontWeight = "400";
       
-      if (fontFamily === "Playfair Display" || fontFamily === "Cinzel" || 
-          fontFamily === "Cormorant Garamond" || fontFamily === "Libre Baskerville") {
+      if (["Playfair Display", "Cinzel", "Cormorant Garamond", "Libre Baskerville", 
+           "Merriweather", "EB Garamond", "Crimson Text", "Old Standard TT"].includes(fontFamily)) {
         fontWeight = "700";
-      } else if (fontFamily === "Montserrat" || fontFamily === "Poppins" || 
-                 fontFamily === "Raleway" || fontFamily === "Lato") {
+      } else if (["Montserrat", "Poppins", "Raleway", "Lato", "Oswald", "Roboto", "Open Sans"].includes(fontFamily)) {
         fontWeight = "600";
       }
       
@@ -320,11 +330,10 @@ const CertificateEditor = ({
           let fontFamily = el.fontFamily;
           let fontWeight = "400";
           
-          if (fontFamily === "Playfair Display" || fontFamily === "Cinzel" || 
-              fontFamily === "Cormorant Garamond" || fontFamily === "Libre Baskerville") {
+          if (["Playfair Display", "Cinzel", "Cormorant Garamond", "Libre Baskerville", 
+               "Merriweather", "EB Garamond", "Crimson Text", "Old Standard TT"].includes(fontFamily)) {
             fontWeight = "700";
-          } else if (fontFamily === "Montserrat" || fontFamily === "Poppins" || 
-                     fontFamily === "Raleway" || fontFamily === "Lato") {
+          } else if (["Montserrat", "Poppins", "Raleway", "Lato", "Oswald", "Roboto", "Open Sans"].includes(fontFamily)) {
             fontWeight = "600";
           }
           
@@ -379,7 +388,7 @@ const CertificateEditor = ({
 
       <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
         <p className="text-xs text-muted-foreground text-center">
-          💡 <span className="font-semibold">Preview uses Google Fonts</span> — Final PDFs use standard fonts for compatibility
+          ✨ <span className="font-semibold">Google Fonts are embedded in PDFs</span> — What you see is what you get!
         </p>
       </div>
 
