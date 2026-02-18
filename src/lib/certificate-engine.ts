@@ -29,15 +29,43 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
   const templateBytes = await templateFile.arrayBuffer();
   const isImage = templateFile.type.startsWith("image/");
 
-  // Font mapping
+  // Font mapping - Google Fonts to PDF Standard Fonts
   const getFontType = (fontFamily: string) => {
+    // Map Google Fonts to closest PDF standard fonts
     switch (fontFamily) {
+      // Elegant Serif fonts → Times Roman Bold (closest match)
+      case "Playfair Display":
+      case "Cinzel":
+      case "Cormorant Garamond":
+        return StandardFonts.TimesRomanBold;
+      
+      // Formal Serif → Times Roman
+      case "Libre Baskerville":
+        return StandardFonts.TimesRoman;
+      
+      // Modern Sans fonts → Helvetica Bold
+      case "Montserrat":
+      case "Poppins":
+      case "Raleway":
+        return StandardFonts.HelveticaBold;
+      
+      // Minimal Sans → Helvetica
+      case "Lato":
+        return StandardFonts.Helvetica;
+      
+      // Script fonts → Times Italic (closest available)
+      case "Great Vibes":
+      case "Allura":
+        return StandardFonts.TimesRomanItalic;
+      
+      // Standard PDF fonts
       case "Helvetica": return StandardFonts.Helvetica;
       case "Helvetica-Bold": return StandardFonts.HelveticaBold;
       case "Times-Roman": return StandardFonts.TimesRoman;
       case "Times-Bold": return StandardFonts.TimesRomanBold;
       case "Courier": return StandardFonts.Courier;
       case "Courier-Bold": return StandardFonts.CourierBold;
+      
       default: return StandardFonts.Helvetica;
     }
   };

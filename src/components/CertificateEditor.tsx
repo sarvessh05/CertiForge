@@ -34,15 +34,35 @@ const COLORS = [
   { value: "#003366", label: "Dark Blue" },
   { value: "#4B0082", label: "Indigo" },
   { value: "#2F4F4F", label: "Dark Slate" },
+
+  // Added Premium Shades
+  { value: "#2C3E50", label: "Midnight Blue" },
+  { value: "#7B3F00", label: "Royal Brown" },
+  { value: "#800020", label: "Burgundy" },
+  { value: "#DAA520", label: "Goldenrod" },
 ];
 
 const FONTS = [
-  { value: "Helvetica", label: "Helvetica" },
-  { value: "Times-Roman", label: "Times New Roman" },
-  { value: "Courier", label: "Courier" },
-  { value: "Helvetica-Bold", label: "Helvetica Bold" },
-  { value: "Times-Bold", label: "Times Bold" },
-  { value: "Courier-Bold", label: "Courier Bold" },
+  // Elegant Serif (Best for Names)
+  { value: "Playfair Display", label: "Playfair Display (Elegant)" },
+  { value: "Cinzel", label: "Cinzel (Royal)" },
+  { value: "Cormorant Garamond", label: "Cormorant Garamond (Classic)" },
+  { value: "Libre Baskerville", label: "Libre Baskerville (Formal)" },
+
+  // Modern Sans (For Event/Date)
+  { value: "Montserrat", label: "Montserrat (Modern)" },
+  { value: "Poppins", label: "Poppins (Clean)" },
+  { value: "Raleway", label: "Raleway (Professional)" },
+  { value: "Lato", label: "Lato (Minimal)" },
+
+  // Script (Optional)
+  { value: "Great Vibes", label: "Great Vibes (Signature)" },
+  { value: "Allura", label: "Allura (Elegant Script)" },
+
+  // Fallback PDF Fonts
+  { value: "Helvetica", label: "Helvetica (Default)" },
+  { value: "Times-Roman", label: "Times New Roman (Default)" },
+  { value: "Courier", label: "Courier (Default)" }
 ];
 
 const CertificateEditor = ({
@@ -105,9 +125,21 @@ const CertificateEditor = ({
     elements.forEach((el) => {
       if (!el.enabled) return;
       const scale = canvas.width / 800;
-      const fontFamily = el.fontFamily.includes("Bold") ? "Inter" : "Inter";
-      const fontWeight = el.fontFamily.includes("Bold") ? "bold " : "";
-      ctx.font = `${fontWeight}${el.fontSize * scale}px ${fontFamily}`;
+      
+      // Use the actual selected font family for canvas preview
+      let fontFamily = el.fontFamily;
+      let fontWeight = "400";
+      
+      // Handle font weights for Google Fonts
+      if (fontFamily === "Playfair Display" || fontFamily === "Cinzel" || 
+          fontFamily === "Cormorant Garamond" || fontFamily === "Libre Baskerville") {
+        fontWeight = "700"; // Bold for elegant serif fonts
+      } else if (fontFamily === "Montserrat" || fontFamily === "Poppins" || 
+                 fontFamily === "Raleway" || fontFamily === "Lato") {
+        fontWeight = "600"; // Semi-bold for modern sans
+      }
+      
+      ctx.font = `${fontWeight} ${el.fontSize * scale}px "${fontFamily}", serif`;
       ctx.fillStyle = el.color;
       ctx.textAlign = "center";
       
@@ -214,9 +246,19 @@ const CertificateEditor = ({
       const ctx = canvas.getContext("2d");
       if (!ctx) continue;
       
-      const fontFamily = el.fontFamily.includes("Bold") ? "Inter" : "Inter";
-      const fontWeight = el.fontFamily.includes("Bold") ? "bold " : "";
-      ctx.font = `${fontWeight}${el.fontSize * scale}px ${fontFamily}`;
+      // Use actual font for measurement
+      let fontFamily = el.fontFamily;
+      let fontWeight = "400";
+      
+      if (fontFamily === "Playfair Display" || fontFamily === "Cinzel" || 
+          fontFamily === "Cormorant Garamond" || fontFamily === "Libre Baskerville") {
+        fontWeight = "700";
+      } else if (fontFamily === "Montserrat" || fontFamily === "Poppins" || 
+                 fontFamily === "Raleway" || fontFamily === "Lato") {
+        fontWeight = "600";
+      }
+      
+      ctx.font = `${fontWeight} ${el.fontSize * scale}px "${fontFamily}", serif`;
       const textWidth = ctx.measureText(`[${el.label}]`).width / scale;
       
       const hitPadding = 20; // Extra padding for easier clicking
@@ -274,9 +316,19 @@ const CertificateEditor = ({
           const ctx = canvas.getContext("2d");
           if (!ctx) continue;
           
-          const fontFamily = el.fontFamily.includes("Bold") ? "Inter" : "Inter";
-          const fontWeight = el.fontFamily.includes("Bold") ? "bold " : "";
-          ctx.font = `${fontWeight}${el.fontSize * scale}px ${fontFamily}`;
+          // Use actual font for measurement
+          let fontFamily = el.fontFamily;
+          let fontWeight = "400";
+          
+          if (fontFamily === "Playfair Display" || fontFamily === "Cinzel" || 
+              fontFamily === "Cormorant Garamond" || fontFamily === "Libre Baskerville") {
+            fontWeight = "700";
+          } else if (fontFamily === "Montserrat" || fontFamily === "Poppins" || 
+                     fontFamily === "Raleway" || fontFamily === "Lato") {
+            fontWeight = "600";
+          }
+          
+          ctx.font = `${fontWeight} ${el.fontSize * scale}px "${fontFamily}", serif`;
           const textWidth = ctx.measureText(`[${el.label}]`).width / scale;
           
           const hitPadding = 20;
@@ -324,6 +376,12 @@ const CertificateEditor = ({
       <p className="text-xs text-muted-foreground font-mono text-center">
         {dragging ? "Dragging..." : "Hover and drag elements to reposition them"}
       </p>
+
+      <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+        <p className="text-xs text-muted-foreground text-center">
+          💡 <span className="font-semibold">Preview uses Google Fonts</span> — Final PDFs use standard fonts for compatibility
+        </p>
+      </div>
 
       {/* Element controls */}
       <div className="space-y-4">

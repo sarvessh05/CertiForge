@@ -11,9 +11,9 @@ import { generateCertificates, downloadZip } from "@/lib/certificate-engine";
 const STEPS = ["Upload", "Map Fields", "Design", "Generate"];
 
 const DEFAULT_ELEMENTS: TextElement[] = [
-  { key: "name", label: "Recipient Name", x: 400, y: 280, fontSize: 36, color: "#000000", fontFamily: "Helvetica-Bold", enabled: true },
-  { key: "event", label: "Event / Course", x: 400, y: 230, fontSize: 20, color: "#003366", fontFamily: "Helvetica", enabled: true },
-  { key: "date", label: "Date", x: 400, y: 400, fontSize: 16, color: "#666666", fontFamily: "Times-Roman", enabled: true },
+  { key: "name", label: "Recipient Name", x: 400, y: 280, fontSize: 36, color: "#000000", fontFamily: "Playfair Display", enabled: true },
+  { key: "event", label: "Event / Course", x: 400, y: 230, fontSize: 20, color: "#003366", fontFamily: "Montserrat", enabled: true },
+  { key: "date", label: "Date", x: 400, y: 400, fontSize: 16, color: "#666666", fontFamily: "Lato", enabled: true },
   { key: "id", label: "Certificate ID", x: 400, y: 440, fontSize: 12, color: "#999999", fontFamily: "Courier", enabled: false },
 ];
 
