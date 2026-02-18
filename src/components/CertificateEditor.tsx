@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 
 export interface TextElement {
   key: string;
@@ -15,6 +16,18 @@ export interface TextElement {
   enabled: boolean;
 }
 
+export interface SignatureElement {
+  id: string;
+  label: string;
+  file: File;
+  url: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  enabled: boolean;
+}
+
 interface CertificateEditorProps {
   templateUrl: string | null;
   elements: TextElement[];
@@ -23,6 +36,8 @@ interface CertificateEditorProps {
   onQRChange: (enabled: boolean) => void;
   qrPosition: { x: number; y: number };
   onQRPositionChange: (pos: { x: number; y: number }) => void;
+  signatures: SignatureElement[];
+  onSignaturesChange: (signatures: SignatureElement[]) => void;
 }
 
 const COLORS = [
@@ -83,12 +98,15 @@ const CertificateEditor = ({
   onQRChange,
   qrPosition,
   onQRPositionChange,
+  signatures,
+  onSignaturesChange,
 }: CertificateEditorProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [hovering, setHovering] = useState<string | null>(null);
   const [templateImg, setTemplateImg] = useState<HTMLImageElement | null>(null);
+  const [signatureImgs, setSignatureImgs] = useState<Map<string, HTMLImageElement>>(new Map());
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 566 });
   const dragOffset = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
@@ -107,6 +125,28 @@ const CertificateEditor = ({
     };
     img.src = templateUrl;
   }, [templateUrl]);
+
+  // Load signature images
+  useEffect(() => {
+    const loadSignatures = async () => {
+      const newImgs = new Map<string, HTMLImageElement>();
+      
+      for (const sig of signatures) {
+        if (sig.enabled) {
+          const img = new window.Image();
+          await new Promise((resolve) => {
+            img.onload = resolve;
+            img.src = sig.url;
+          });
+          newImgs.set(sig.id, img);
+        }
+      }
+      
+      setSignatureImgs(newImgs);
+    };
+    
+    loadSignatures();
+  }, [signatures]);
 
   // Draw canvas
   const draw = useCallback(() => {
@@ -211,7 +251,42 @@ const CertificateEditor = ({
         ctx.fill();
       }
     }
-  }, [templateImg, elements, enableQR, qrPosition, hovering, dragging]);
+
+    // Draw signatures
+    signatures.forEach((sig) => {
+      if (!sig.enabled) return;
+      const sigImg = signatureImgs.get(sig.id);
+      if (!sigImg) return;
+      
+      const scale = canvas.width / 800;
+      const sigW = sig.width * scale;
+      const sigH = sig.height * scale;
+      const sigX = sig.x * scale;
+      const sigY = sig.y * scale;
+      
+      // Highlight if hovering or dragging
+      if (hovering === sig.id || dragging === sig.id) {
+        ctx.fillStyle = "rgba(212, 160, 23, 0.2)";
+        ctx.fillRect(sigX - sigW / 2 - 4, sigY - sigH / 2 - 4, sigW + 8, sigH + 8);
+      }
+      
+      // Draw signature image
+      ctx.drawImage(sigImg, sigX - sigW / 2, sigY - sigH / 2, sigW, sigH);
+      
+      // Draw border and drag handle
+      if (hovering === sig.id || dragging === sig.id) {
+        ctx.strokeStyle = "#d4a017";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(sigX - sigW / 2, sigY - sigH / 2, sigW, sigH);
+        
+        ctx.beginPath();
+        ctx.arc(sigX, sigY - sigH / 2 - 10 * scale, 6 * scale, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = "#d4a017";
+        ctx.fill();
+      }
+    });
+  }, [templateImg, elements, enableQR, qrPosition, hovering, dragging, signatures, signatureImgs]);
 
   useEffect(() => {
     draw();
@@ -235,10 +310,26 @@ const CertificateEditor = ({
     if (!canvas) return;
     const scale = canvas.width / 800;
 
+    // Check signatures first (on top)
+    for (const sig of signatures) {
+      if (!sig.enabled) continue;
+      const sigW = sig.width;
+      const sigH = sig.height;
+      const distX = Math.abs(coords.x - sig.x);
+      const distY = Math.abs(coords.y - sig.y);
+      
+      if (distX < sigW / 2 + 20 && distY < sigH / 2 + 20) {
+        setDragging(sig.id);
+        isDraggingRef.current = true;
+        dragOffset.current = { x: coords.x - sig.x, y: coords.y - sig.y };
+        return;
+      }
+    }
+
     // Check QR with larger hit area
     if (enableQR) {
       const qrSize = 60;
-      const hitArea = 80; // Larger hit area for easier clicking
+      const hitArea = 80;
       const distX = Math.abs(coords.x - qrPosition.x);
       const distY = Math.abs(coords.y - qrPosition.y);
       if (distX < hitArea / 2 && distY < hitArea / 2) {
@@ -271,7 +362,7 @@ const CertificateEditor = ({
       ctx.font = `${fontWeight} ${el.fontSize * scale}px "${fontFamily}", serif`;
       const textWidth = ctx.measureText(`[${el.label}]`).width / scale;
       
-      const hitPadding = 20; // Extra padding for easier clicking
+      const hitPadding = 20;
       const distX = Math.abs(coords.x - el.x);
       const distY = Math.abs(coords.y - el.y);
       
@@ -297,6 +388,13 @@ const CertificateEditor = ({
 
       if (dragging === "__qr__") {
         onQRPositionChange({ x: newX, y: newY });
+      } else if (signatures.find(s => s.id === dragging)) {
+        // Update signature position
+        onSignaturesChange(
+          signatures.map((sig) =>
+            sig.id === dragging ? { ...sig, x: newX, y: newY } : sig
+          )
+        );
       } else {
         onElementsChange(
           elements.map((el) =>
@@ -308,8 +406,22 @@ const CertificateEditor = ({
       // Hover detection
       let foundHover = null;
 
+      // Check signatures
+      for (const sig of signatures) {
+        if (!sig.enabled) continue;
+        const sigW = sig.width;
+        const sigH = sig.height;
+        const distX = Math.abs(coords.x - sig.x);
+        const distY = Math.abs(coords.y - sig.y);
+        
+        if (distX < sigW / 2 + 20 && distY < sigH / 2 + 20) {
+          foundHover = sig.id;
+          break;
+        }
+      }
+
       // Check QR
-      if (enableQR) {
+      if (!foundHover && enableQR) {
         const hitArea = 80;
         const distX = Math.abs(coords.x - qrPosition.x);
         const distY = Math.abs(coords.y - qrPosition.y);
@@ -494,6 +606,139 @@ const CertificateEditor = ({
               Position: {Math.round(qrPosition.x)}, {Math.round(qrPosition.y)} — drag on preview
             </p>
           )}
+        </div>
+
+        {/* Signatures Section */}
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="flex items-center justify-between mb-4">
+            <Label className="font-mono text-sm font-semibold">Signature Overlays</Label>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = "image/png,image/jpeg,image/jpg";
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) {
+                    const id = `sig_${Date.now()}`;
+                    const url = URL.createObjectURL(file);
+                    const newSig: SignatureElement = {
+                      id,
+                      label: `Signature ${signatures.length + 1}`,
+                      file,
+                      url,
+                      x: 400,
+                      y: 500,
+                      width: 150,
+                      height: 60,
+                      enabled: true,
+                    };
+                    onSignaturesChange([...signatures, newSig]);
+                  }
+                };
+                input.click();
+              }}
+              className="font-mono text-xs"
+            >
+              + Add Signature
+            </Button>
+          </div>
+
+          {signatures.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center py-4">
+              No signatures added. Click "Add Signature" to upload PNG/JPG files.
+            </p>
+          )}
+
+          {signatures.map((sig) => (
+            <div
+              key={sig.id}
+              className={`rounded-lg border p-3 mb-3 transition-colors ${
+                sig.enabled ? "border-glow bg-card" : "border-border bg-secondary/30"
+              }`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <Checkbox
+                  checked={sig.enabled}
+                  onCheckedChange={(checked) =>
+                    onSignaturesChange(
+                      signatures.map((s) =>
+                        s.id === sig.id ? { ...s, enabled: !!checked } : s
+                      )
+                    )
+                  }
+                />
+                <Input
+                  value={sig.label}
+                  onChange={(e) =>
+                    onSignaturesChange(
+                      signatures.map((s) =>
+                        s.id === sig.id ? { ...s, label: e.target.value } : s
+                      )
+                    )
+                  }
+                  className="bg-secondary border-border h-7 text-xs flex-1"
+                  placeholder="Signature label"
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() =>
+                    onSignaturesChange(signatures.filter((s) => s.id !== sig.id))
+                  }
+                  className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                >
+                  ×
+                </Button>
+              </div>
+              {sig.enabled && (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Width</Label>
+                    <Input
+                      type="number"
+                      value={sig.width}
+                      onChange={(e) =>
+                        onSignaturesChange(
+                          signatures.map((s) =>
+                            s.id === sig.id ? { ...s, width: Number(e.target.value) } : s
+                          )
+                        )
+                      }
+                      className="bg-secondary border-border h-7 text-xs"
+                      min={50}
+                      max={400}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Height</Label>
+                    <Input
+                      type="number"
+                      value={sig.height}
+                      onChange={(e) =>
+                        onSignaturesChange(
+                          signatures.map((s) =>
+                            s.id === sig.id ? { ...s, height: Number(e.target.value) } : s
+                          )
+                        )
+                      }
+                      className="bg-secondary border-border h-7 text-xs"
+                      min={30}
+                      max={300}
+                    />
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <Label className="text-xs text-muted-foreground">Position</Label>
+                    <p className="text-xs text-muted-foreground font-mono">
+                      {Math.round(sig.x)}, {Math.round(sig.y)} — drag on preview
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>

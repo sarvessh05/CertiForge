@@ -3,7 +3,7 @@ import * as fontkit from "fontkit";
 import QRCode from "qrcode";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import type { TextElement } from "@/components/CertificateEditor";
+import type { TextElement, SignatureElement } from "@/components/CertificateEditor";
 
 interface GenerateOptions {
   templateFile: File;
@@ -12,6 +12,7 @@ interface GenerateOptions {
   elements: TextElement[];
   enableQR: boolean;
   qrPosition: { x: number; y: number };
+  signatures: SignatureElement[];
   onProgress: (current: number) => void;
 }
 
@@ -76,6 +77,7 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
     elements,
     enableQR,
     qrPosition,
+    signatures,
     onProgress,
   } = options;
 
@@ -87,6 +89,15 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
   const uniqueFonts = [...new Set(elements.filter(el => el.enabled).map(el => el.fontFamily))];
   const fontPromises = uniqueFonts.map(font => loadFont(font));
   await Promise.all(fontPromises);
+
+  // Pre-load signature images
+  const signatureImages = new Map<string, ArrayBuffer>();
+  for (const sig of signatures) {
+    if (sig.enabled) {
+      const sigBytes = await sig.file.arrayBuffer();
+      signatureImages.set(sig.id, sigBytes);
+    }
+  }
 
   for (let i = 0; i < data.length; i++) {
     const row = data[i];
@@ -156,6 +167,31 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
         font,
         color: rgb(r, g, b),
       });
+    }
+
+    // Add signatures
+    for (const sig of signatures) {
+      if (!sig.enabled) continue;
+      const sigBytes = signatureImages.get(sig.id);
+      if (!sigBytes) continue;
+
+      try {
+        const sigImage = sig.file.type.includes("png")
+          ? await pdfDoc.embedPng(sigBytes)
+          : await pdfDoc.embedJpg(sigBytes);
+
+        const sigWidth = sig.width * scaleX;
+        const sigHeight = sig.height * scaleX;
+
+        page.drawImage(sigImage, {
+          x: sig.x * scaleX - sigWidth / 2,
+          y: pageH - sig.y * scaleY - sigHeight / 2,
+          width: sigWidth,
+          height: sigHeight,
+        });
+      } catch (error) {
+        console.error(`Failed to embed signature ${sig.label}:`, error);
+      }
     }
 
     // QR Code

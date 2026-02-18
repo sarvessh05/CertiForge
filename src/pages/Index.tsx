@@ -4,7 +4,7 @@ import { Flame, ChevronRight, ChevronLeft, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FileUpload from "@/components/FileUpload";
 import FieldMapper from "@/components/FieldMapper";
-import CertificateEditor, { type TextElement } from "@/components/CertificateEditor";
+import CertificateEditor, { type TextElement, type SignatureElement } from "@/components/CertificateEditor";
 import GenerationProgress from "@/components/GenerationProgress";
 import { generateCertificates, downloadZip } from "@/lib/certificate-engine";
 
@@ -34,6 +34,7 @@ const Index = () => {
   const [elements, setElements] = useState<TextElement[]>(DEFAULT_ELEMENTS);
   const [enableQR, setEnableQR] = useState(false);
   const [qrPosition, setQrPosition] = useState({ x: 700, y: 480 });
+  const [signatures, setSignatures] = useState<SignatureElement[]>([]);
 
   // Generation
   const [isGenerating, setIsGenerating] = useState(false);
@@ -77,6 +78,7 @@ const Index = () => {
         elements,
         enableQR,
         qrPosition,
+        signatures,
         onProgress: setProgress,
       });
       setZipBlob(blob);
@@ -248,6 +250,8 @@ const Index = () => {
                 onQRChange={setEnableQR}
                 qrPosition={qrPosition}
                 onQRPositionChange={setQrPosition}
+                signatures={signatures}
+                onSignaturesChange={setSignatures}
               />
             </div>
           )}
