@@ -1,5 +1,5 @@
 import { PDFDocument, rgb } from "pdf-lib";
-import fontkit from "fontkit";
+import * as fontkit from "fontkit";
 import QRCode from "qrcode";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
