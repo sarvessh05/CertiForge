@@ -29,6 +29,19 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
   const templateBytes = await templateFile.arrayBuffer();
   const isImage = templateFile.type.startsWith("image/");
 
+  // Font mapping
+  const getFontType = (fontFamily: string) => {
+    switch (fontFamily) {
+      case "Helvetica": return StandardFonts.Helvetica;
+      case "Helvetica-Bold": return StandardFonts.HelveticaBold;
+      case "Times-Roman": return StandardFonts.TimesRoman;
+      case "Times-Bold": return StandardFonts.TimesRomanBold;
+      case "Courier": return StandardFonts.Courier;
+      case "Courier-Bold": return StandardFonts.CourierBold;
+      default: return StandardFonts.Helvetica;
+    }
+  };
+
   for (let i = 0; i < data.length; i++) {
     const row = data[i];
 
@@ -48,7 +61,6 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
 
     const page = pdfDoc.getPages()[0];
     const { width: pageW, height: pageH } = page.getSize();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
     // Scale from 800px canvas to actual PDF dimensions
     const scaleX = pageW / 800;
@@ -60,6 +72,9 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
       if (!columnName) continue;
       const text = String(row[columnName] ?? "");
       if (!text) continue;
+
+      // Embed font for this element
+      const font = await pdfDoc.embedFont(getFontType(el.fontFamily));
 
       const hexColor = el.color;
       const r = parseInt(hexColor.slice(1, 3), 16) / 255;

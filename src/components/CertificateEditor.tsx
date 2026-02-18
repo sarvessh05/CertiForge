@@ -11,6 +11,7 @@ export interface TextElement {
   y: number;
   fontSize: number;
   color: string;
+  fontFamily: string;
   enabled: boolean;
 }
 
@@ -31,6 +32,17 @@ const COLORS = [
   { value: "#d4a017", label: "Gold" },
   { value: "#8B0000", label: "Dark Red" },
   { value: "#003366", label: "Dark Blue" },
+  { value: "#4B0082", label: "Indigo" },
+  { value: "#2F4F4F", label: "Dark Slate" },
+];
+
+const FONTS = [
+  { value: "Helvetica", label: "Helvetica" },
+  { value: "Times-Roman", label: "Times New Roman" },
+  { value: "Courier", label: "Courier" },
+  { value: "Helvetica-Bold", label: "Helvetica Bold" },
+  { value: "Times-Bold", label: "Times Bold" },
+  { value: "Courier-Bold", label: "Courier Bold" },
 ];
 
 const CertificateEditor = ({
@@ -45,9 +57,11 @@ const CertificateEditor = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<string | null>(null);
+  const [hovering, setHovering] = useState<string | null>(null);
   const [templateImg, setTemplateImg] = useState<HTMLImageElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 566 });
   const dragOffset = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
 
   // Load template image
   useEffect(() => {
@@ -91,10 +105,38 @@ const CertificateEditor = ({
     elements.forEach((el) => {
       if (!el.enabled) return;
       const scale = canvas.width / 800;
-      ctx.font = `${el.fontSize * scale}px Inter`;
+      const fontFamily = el.fontFamily.includes("Bold") ? "Inter" : "Inter";
+      const fontWeight = el.fontFamily.includes("Bold") ? "bold " : "";
+      ctx.font = `${fontWeight}${el.fontSize * scale}px ${fontFamily}`;
       ctx.fillStyle = el.color;
       ctx.textAlign = "center";
+      
+      // Highlight if hovering or dragging
+      if (hovering === el.key || dragging === el.key) {
+        const textWidth = ctx.measureText(`[${el.label}]`).width;
+        const padding = 8 * scale;
+        ctx.fillStyle = "rgba(212, 160, 23, 0.2)";
+        ctx.fillRect(
+          el.x * scale - textWidth / 2 - padding,
+          el.y * scale - el.fontSize * scale - padding,
+          textWidth + padding * 2,
+          el.fontSize * scale + padding * 2
+        );
+        ctx.fillStyle = el.color;
+      }
+      
       ctx.fillText(`[${el.label}]`, el.x * scale, el.y * scale);
+      
+      // Draw drag handle
+      if (hovering === el.key || dragging === el.key) {
+        ctx.strokeStyle = "#d4a017";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(el.x * scale, el.y * scale - el.fontSize * scale / 2, 6 * scale, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = "#d4a017";
+        ctx.fill();
+      }
     });
 
     // Draw QR placeholder
@@ -103,6 +145,13 @@ const CertificateEditor = ({
       const qrSize = 60 * scale;
       const qx = qrPosition.x * scale;
       const qy = qrPosition.y * scale;
+      
+      // Highlight if hovering or dragging
+      if (hovering === "__qr__" || dragging === "__qr__") {
+        ctx.fillStyle = "rgba(212, 160, 23, 0.2)";
+        ctx.fillRect(qx - qrSize / 2 - 4, qy - qrSize / 2 - 4, qrSize + 8, qrSize + 8);
+      }
+      
       ctx.strokeStyle = "#d4a017";
       ctx.lineWidth = 2;
       ctx.strokeRect(qx - qrSize / 2, qy - qrSize / 2, qrSize, qrSize);
@@ -110,8 +159,16 @@ const CertificateEditor = ({
       ctx.font = `${10 * scale}px JetBrains Mono`;
       ctx.textAlign = "center";
       ctx.fillText("QR", qx, qy + 4 * scale);
+      
+      // Draw drag handle
+      if (hovering === "__qr__" || dragging === "__qr__") {
+        ctx.beginPath();
+        ctx.arc(qx, qy - qrSize / 2 - 10 * scale, 6 * scale, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fill();
+      }
     }
-  }, [templateImg, elements, enableQR, qrPosition]);
+  }, [templateImg, elements, enableQR, qrPosition, hovering, dragging]);
 
   useEffect(() => {
     draw();
@@ -131,24 +188,44 @@ const CertificateEditor = ({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     const coords = getCanvasCoords(e);
-    const scale = 1;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const scale = canvas.width / 800;
 
-    // Check QR
+    // Check QR with larger hit area
     if (enableQR) {
-      const dist = Math.hypot(coords.x - qrPosition.x, coords.y - qrPosition.y);
-      if (dist < 40) {
+      const qrSize = 60;
+      const hitArea = 80; // Larger hit area for easier clicking
+      const distX = Math.abs(coords.x - qrPosition.x);
+      const distY = Math.abs(coords.y - qrPosition.y);
+      if (distX < hitArea / 2 && distY < hitArea / 2) {
         setDragging("__qr__");
+        isDraggingRef.current = true;
         dragOffset.current = { x: coords.x - qrPosition.x, y: coords.y - qrPosition.y };
         return;
       }
     }
 
-    // Check elements
+    // Check elements with better hit detection
     for (const el of elements) {
       if (!el.enabled) continue;
-      const dist = Math.hypot(coords.x - el.x, coords.y - el.y);
-      if (dist < el.fontSize * scale) {
+      
+      // Calculate text bounds for better hit detection
+      const ctx = canvas.getContext("2d");
+      if (!ctx) continue;
+      
+      const fontFamily = el.fontFamily.includes("Bold") ? "Inter" : "Inter";
+      const fontWeight = el.fontFamily.includes("Bold") ? "bold " : "";
+      ctx.font = `${fontWeight}${el.fontSize * scale}px ${fontFamily}`;
+      const textWidth = ctx.measureText(`[${el.label}]`).width / scale;
+      
+      const hitPadding = 20; // Extra padding for easier clicking
+      const distX = Math.abs(coords.x - el.x);
+      const distY = Math.abs(coords.y - el.y);
+      
+      if (distX < textWidth / 2 + hitPadding && distY < el.fontSize / 2 + hitPadding) {
         setDragging(el.key);
+        isDraggingRef.current = true;
         dragOffset.current = { x: coords.x - el.x, y: coords.y - el.y };
         return;
       }
@@ -156,23 +233,71 @@ const CertificateEditor = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragging) return;
     const coords = getCanvasCoords(e);
-    const newX = coords.x - dragOffset.current.x;
-    const newY = coords.y - dragOffset.current.y;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const scale = canvas.width / 800;
 
-    if (dragging === "__qr__") {
-      onQRPositionChange({ x: newX, y: newY });
+    if (dragging && isDraggingRef.current) {
+      // Dragging mode
+      const newX = Math.max(0, Math.min(800, coords.x - dragOffset.current.x));
+      const newY = Math.max(0, Math.min(canvasSize.height / scale * 800 / canvasSize.width, coords.y - dragOffset.current.y));
+
+      if (dragging === "__qr__") {
+        onQRPositionChange({ x: newX, y: newY });
+      } else {
+        onElementsChange(
+          elements.map((el) =>
+            el.key === dragging ? { ...el, x: newX, y: newY } : el
+          )
+        );
+      }
     } else {
-      onElementsChange(
-        elements.map((el) =>
-          el.key === dragging ? { ...el, x: newX, y: newY } : el
-        )
-      );
+      // Hover detection
+      let foundHover = null;
+
+      // Check QR
+      if (enableQR) {
+        const hitArea = 80;
+        const distX = Math.abs(coords.x - qrPosition.x);
+        const distY = Math.abs(coords.y - qrPosition.y);
+        if (distX < hitArea / 2 && distY < hitArea / 2) {
+          foundHover = "__qr__";
+        }
+      }
+
+      // Check elements
+      if (!foundHover) {
+        for (const el of elements) {
+          if (!el.enabled) continue;
+          
+          const ctx = canvas.getContext("2d");
+          if (!ctx) continue;
+          
+          const fontFamily = el.fontFamily.includes("Bold") ? "Inter" : "Inter";
+          const fontWeight = el.fontFamily.includes("Bold") ? "bold " : "";
+          ctx.font = `${fontWeight}${el.fontSize * scale}px ${fontFamily}`;
+          const textWidth = ctx.measureText(`[${el.label}]`).width / scale;
+          
+          const hitPadding = 20;
+          const distX = Math.abs(coords.x - el.x);
+          const distY = Math.abs(coords.y - el.y);
+          
+          if (distX < textWidth / 2 + hitPadding && distY < el.fontSize / 2 + hitPadding) {
+            foundHover = el.key;
+            break;
+          }
+        }
+      }
+
+      setHovering(foundHover);
     }
   };
 
-  const handleMouseUp = () => setDragging(null);
+  const handleMouseUp = () => {
+    setDragging(null);
+    isDraggingRef.current = false;
+  };
 
   const updateElement = (key: string, updates: Partial<TextElement>) => {
     onElementsChange(
@@ -188,7 +313,7 @@ const CertificateEditor = ({
           ref={canvasRef}
           width={canvasSize.width}
           height={canvasSize.height}
-          className="w-full cursor-move"
+          className={`w-full ${dragging ? "cursor-grabbing" : hovering ? "cursor-grab" : "cursor-default"}`}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -197,7 +322,7 @@ const CertificateEditor = ({
       </div>
 
       <p className="text-xs text-muted-foreground font-mono text-center">
-        Drag elements on the preview to position them
+        {dragging ? "Dragging..." : "Hover and drag elements to reposition them"}
       </p>
 
       {/* Element controls */}
@@ -219,7 +344,25 @@ const CertificateEditor = ({
               <Label className="font-mono text-sm font-semibold">{el.label}</Label>
             </div>
             {el.enabled && (
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Font</Label>
+                  <Select
+                    value={el.fontFamily}
+                    onValueChange={(val) => updateElement(el.key, { fontFamily: val })}
+                  >
+                    <SelectTrigger className="bg-secondary border-border h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FONTS.map((f) => (
+                        <SelectItem key={f.value} value={f.value}>
+                          {f.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Size</Label>
                   <Input
