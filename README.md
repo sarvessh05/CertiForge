@@ -1,4 +1,4 @@
-# CertiForge 🔥
+# Veriforge 🔥
 
 A powerful, modern web application for automated bulk certificate generation with customizable templates, premium fonts, and QR verification codes.
 
@@ -35,10 +35,10 @@ A powerful, modern web application for automated bulk certificate generation wit
 
 ```bash
 # Clone the repository
-git clone https://github.com/sarvessh05/CertiForge.git
+git clone https://github.com/sarvessh05/Veriforge.git
 
 # Navigate to project directory
-cd CertiForge
+cd Veriforge
 
 # Install dependencies
 npm install
@@ -120,7 +120,7 @@ Your spreadsheet should contain columns for recipient information. Example:
 ## Project Structure
 
 ```
-CertiForge/
+Veriforge/
 ├── src/
 │   ├── components/          # React components
 │   │   ├── ui/             # shadcn/ui components
@@ -153,7 +153,7 @@ CertiForge/
 ## Key Features Explained
 
 ### Font Embedding
-CertiForge uses `fontkit` to embed Google Fonts directly into PDFs. This means:
+Veriforge uses `fontkit` to embed Google Fonts directly into PDFs. This means:
 - No font substitution issues
 - Recipients see exactly what you designed
 - Works on any device without font installation
@@ -174,7 +174,7 @@ CertiForge uses `fontkit` to embed Google Fonts directly into PDFs. This means:
 
 ## Browser Compatibility
 
-CertiForge works best on modern browsers:
+Veriforge works best on modern browsers:
 - Chrome/Edge 90+
 - Firefox 88+
 - Safari 14+
@@ -214,7 +214,7 @@ Created by [Sarvessh](https://github.com/sarvessh05)
 
 ## Support
 
-If you encounter any issues or have questions, please [open an issue](https://github.com/sarvessh05/CertiForge/issues) on GitHub.
+If you encounter any issues or have questions, please [open an issue](https://github.com/sarvessh05/Veriforge/issues) on GitHub.
 
 ---
 

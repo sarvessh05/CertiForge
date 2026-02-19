@@ -110,7 +110,7 @@ const Index = () => {
               <Flame className="h-5 w-5 text-primary-foreground" />
             </div>
             <h1 className="font-mono text-xl font-bold tracking-tight">
-              <span className="gradient-forge-text">CertiForge</span>
+              <span className="gradient-forge-text">Veriforge</span>
             </h1>
           </div>
           <p className="hidden text-sm text-muted-foreground sm:block font-mono">

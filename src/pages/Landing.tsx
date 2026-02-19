@@ -22,7 +22,7 @@ const Landing = () => {
               <Flame className="h-5 w-5 text-primary-foreground" />
             </div>
             <h1 className="font-mono text-xl font-bold tracking-tight">
-              <span className="gradient-forge-text">CertiForge</span>
+              <span className="gradient-forge-text">Veriforge</span>
             </h1>
           </div>
           <Button
@@ -48,7 +48,7 @@ const Landing = () => {
         </h2>
 
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground mb-10">
-          Upload your template, drop in a spreadsheet, position your fields — and let CertiForge
+          Upload your template, drop in a spreadsheet, position your fields — and let Veriforge
           generate bulk certificates with QR verification. No server needed.
         </p>
 
@@ -84,7 +84,7 @@ const Landing = () => {
       <footer className="border-t border-border bg-card/50 py-6">
         <div className="container mx-auto px-6 text-center space-y-2">
           <p className="font-mono text-xs text-muted-foreground">
-            CertiForge — Bulk Certificate Automation
+            Veriforge — Bulk Certificate Automation
           </p>
           <p className="text-xs text-muted-foreground">
             Designed & Built by{" "}
