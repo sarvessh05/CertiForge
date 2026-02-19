@@ -82,9 +82,22 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="border-t border-border bg-card/50 py-6">
-        <p className="text-center font-mono text-xs text-muted-foreground">
-          CertiForge — Bulk Certificate Automation
-        </p>
+        <div className="container mx-auto px-6 text-center space-y-2">
+          <p className="font-mono text-xs text-muted-foreground">
+            CertiForge — Bulk Certificate Automation
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Designed & Built by{" "}
+            <a 
+              href="https://sarveshghotekar.in" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors font-semibold"
+            >
+              Sarvesh Ghotekar
+            </a>
+          </p>
+        </div>
       </footer>
     </div>
   );

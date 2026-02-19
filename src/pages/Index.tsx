@@ -312,6 +312,23 @@ const Index = () => {
           )}
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-card/50 py-4 mt-8">
+        <div className="container mx-auto px-6 text-center">
+          <p className="text-xs text-muted-foreground">
+            Designed & Built by{" "}
+            <a 
+              href="https://sarveshghotekar.in" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors font-semibold"
+            >
+              Sarvesh Ghotekar
+            </a>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
