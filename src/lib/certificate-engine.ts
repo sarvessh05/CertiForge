@@ -27,6 +27,7 @@ const FONT_URLS: Record<string, string> = {
   "EB Garamond": "https://fonts.gstatic.com/s/ebgaramond/v27/SlGDmQSNjdsmc35JDF1K5E55YMjF_7DPuGi-6_RUA4V-e6yHgQ.ttf",
   "Crimson Text": "https://fonts.gstatic.com/s/crimsontext/v19/wlppgwHKFkZgtmSR3NB0oRJvaAJSA_JN3Q.ttf",
   "Old Standard TT": "https://fonts.gstatic.com/s/oldstandardtt/v18/MwQubh3o1vLImiwAVvYawgcf2eVurVC5RHdCZg.ttf",
+  "Bodoni Moda": "https://fonts.gstatic.com/s/bodonimoda/v25/aFT67PxzY382XsXX63LUYL6GYFcan6NJrKp-VPjfJMShrpsGFUt8oU7awIBytVjMYwE.ttf",
   
   // Modern Sans
   "Montserrat": "https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg1_i6t8kCHKm459WdhyyTh89ZNpQ.ttf",

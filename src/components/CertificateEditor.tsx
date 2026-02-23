@@ -67,6 +67,7 @@ const FONTS = [
   { value: "EB Garamond", label: "EB Garamond (Refined)" },
   { value: "Crimson Text", label: "Crimson Text (Academic)" },
   { value: "Old Standard TT", label: "Old Standard TT (Vintage)" },
+  { value: "Bodoni Moda", label: "Bodoni Moda (Sophisticated)" },
 
   // Modern Sans (For Event/Date)
   { value: "Montserrat", label: "Montserrat (Modern)" },
@@ -182,7 +183,7 @@ const CertificateEditor = ({
       
       // Handle font weights for different font categories
       if (["Playfair Display", "Cinzel", "Cormorant Garamond", "Libre Baskerville", 
-           "Merriweather", "EB Garamond", "Crimson Text", "Old Standard TT"].includes(fontFamily)) {
+           "Merriweather", "EB Garamond", "Crimson Text", "Old Standard TT", "Bodoni Moda"].includes(fontFamily)) {
         fontWeight = "700"; // Bold for elegant serif fonts
       } else if (["Montserrat", "Poppins", "Raleway", "Lato", "Oswald", "Roboto", "Open Sans"].includes(fontFamily)) {
         fontWeight = "600"; // Semi-bold for modern sans
@@ -353,7 +354,7 @@ const CertificateEditor = ({
       let fontWeight = "400";
       
       if (["Playfair Display", "Cinzel", "Cormorant Garamond", "Libre Baskerville", 
-           "Merriweather", "EB Garamond", "Crimson Text", "Old Standard TT"].includes(fontFamily)) {
+           "Merriweather", "EB Garamond", "Crimson Text", "Old Standard TT", "Bodoni Moda"].includes(fontFamily)) {
         fontWeight = "700";
       } else if (["Montserrat", "Poppins", "Raleway", "Lato", "Oswald", "Roboto", "Open Sans"].includes(fontFamily)) {
         fontWeight = "600";
@@ -443,7 +444,7 @@ const CertificateEditor = ({
           let fontWeight = "400";
           
           if (["Playfair Display", "Cinzel", "Cormorant Garamond", "Libre Baskerville", 
-               "Merriweather", "EB Garamond", "Crimson Text", "Old Standard TT"].includes(fontFamily)) {
+               "Merriweather", "EB Garamond", "Crimson Text", "Old Standard TT", "Bodoni Moda"].includes(fontFamily)) {
             fontWeight = "700";
           } else if (["Montserrat", "Poppins", "Raleway", "Lato", "Oswald", "Roboto", "Open Sans"].includes(fontFamily)) {
             fontWeight = "600";
