@@ -105,7 +105,7 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
     
     // Add small delay between each certificate
     if (i > 0) {
-      await new Promise(resolve => setTimeout(resolve, 5));
+      await new Promise(resolve => setTimeout(resolve, 20));
     }
 
     let pdfDoc: PDFDocument;
