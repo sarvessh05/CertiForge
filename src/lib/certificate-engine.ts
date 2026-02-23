@@ -99,15 +99,13 @@ export async function generateCertificates(options: GenerateOptions): Promise<Bl
     }
   }
 
-  // Process in batches to avoid memory issues
-  const BATCH_SIZE = 10;
-  
+  // Process one by one with small delays to prevent browser freezing
   for (let i = 0; i < data.length; i++) {
     const row = data[i];
     
-    // Add small delay every batch to prevent browser freezing
-    if (i > 0 && i % BATCH_SIZE === 0) {
-      await new Promise(resolve => setTimeout(resolve, 10));
+    // Add small delay between each certificate
+    if (i > 0) {
+      await new Promise(resolve => setTimeout(resolve, 5));
     }
 
     let pdfDoc: PDFDocument;
